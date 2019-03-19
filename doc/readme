@@ -1,0 +1,17 @@
+install arduino
+1-in arduino ide:
+go to "file->preferences->additional bord manager urls" and add this line
+https://dl.espressif.com/dl/package_esp32_index.json
+
+2-go to :"tools->board->board manager"
+install "esp32 by espressif system"
+
+tools menu settings:
+board:doit esp 32 devkit v1
+baude rate :921600
+flash frequency:80Mhz
+programmer:avrisp mkII
+
+
+to program board hold boot key during connection
+
