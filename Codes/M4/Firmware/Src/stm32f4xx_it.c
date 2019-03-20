@@ -204,16 +204,24 @@ void SysTick_Handler(void)
 void SPI2_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI2_IRQn 0 */
-char temp[12];
+char temp[15];
+uint8_t txdata=190;
+uint8_t rxdata=0;
 	GPIOD->ODR^=1<<12;
 	//HAL_SPI_Receive_IT(&hspi2, data, 1);
 
-  	  sprintf(temp,"esp Data=%d\n",hspi2.Instance->DR);
-  	  HAL_UART_Transmit(&huart3, temp, sizeof(temp), HAL_MAX_DELAY);
+	//HAL_SPI_TransmitReceive_IT(&hspi2,&txdata,&rxdata,1);
+  	  //sprintf(temp,"ESP32Data=%d\n",hspi2.Instance->DR);
 
-  /* USER CODE END SPI2_IRQn 0 */
+	HAL_SPI_TransmitReceive(&hspi2,&txdata,&rxdata,1,10);
+	sprintf(temp,"ESP32Data=%d\n",rxdata);
+	HAL_UART_Transmit(&huart3, temp, sizeof(temp), HAL_MAX_DELAY);
+
+  	  /* USER CODE END SPI2_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi2);
+
   /* USER CODE BEGIN SPI2_IRQn 1 */
+
   HAL_SPI_Abort(&hspi2);
   /* USER CODE END SPI2_IRQn 1 */
 }
