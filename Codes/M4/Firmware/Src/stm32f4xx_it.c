@@ -35,6 +35,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
  CircularBuffer SpiBuffer;
+ uint8_t Response[50];
+ int ResponseIndex=0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -196,6 +198,40 @@ void BufferInit()
 {
 	SpiBuffer=CircularBufferCreate(6);
 }
+void SendSSID()
+{
+
+	ResponseIndex=0;
+
+	Response[0]=0x7e;
+	Response[1]=8;
+	Response[2]=1;
+	Response[3]='N';
+	Response[4]='A';
+	Response[5]='M';
+	Response[6]='E';
+	Response[7]=0x7e;
+	HAL_UART_Transmit(&huart3, "name\n", 5, HAL_MAX_DELAY);
+
+}
+void SendPassword()
+{
+	ResponseIndex=0;
+
+	Response[0]=0x7e;
+	Response[1]=12;
+	Response[2]=2;
+	Response[3]='P';
+	Response[4]='A';
+	Response[5]='S';
+	Response[6]='S';
+	Response[7]='W';
+	Response[8]='O';
+	Response[9]='R';
+	Response[10]='D';
+	Response[11]=0x7e;
+	HAL_UART_Transmit(&huart3, "pass\n", 5, HAL_MAX_DELAY);
+}
 int PacketCompleted(uint8_t data)
 {
 	 uint8_t commandBuffer[6];
@@ -203,9 +239,15 @@ int PacketCompleted(uint8_t data)
 
     CircularBufferPush(SpiBuffer,&data, 1 );
     CircularBufferRead(SpiBuffer,CircularBufferGetDataSize(SpiBuffer),&commandBuffer[0]);
+
+       sprintf(temp,"Data=%x %x %x %x %x %x\n",commandBuffer[0],commandBuffer[1],commandBuffer[2],commandBuffer[3],commandBuffer[4],commandBuffer[5]);
+   	HAL_UART_Transmit(&huart3, temp, strlen(temp), HAL_MAX_DELAY);
 	if(commandBuffer[0]==0x7e && commandBuffer[5]==0x7e ){
-    sprintf(temp,"Data=%x %x %x %x %x %x\n",commandBuffer[0],commandBuffer[1],commandBuffer[2],commandBuffer[3],commandBuffer[4],commandBuffer[5]);
-	HAL_UART_Transmit(&huart3, temp, strlen(temp), HAL_MAX_DELAY);
+		if(commandBuffer[2]==1)SendSSID();
+		if(commandBuffer[2]==2)SendPassword();
+
+
+
 	}
 
 
@@ -223,30 +265,25 @@ int PacketCompleted(uint8_t data)
 void SPI2_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI2_IRQn 0 */
-
-
-
-
 	uint8_t rxdata;
 	uint8_t txdata;
 
 
 	GPIOD->ODR^=1<<12;
-	//HAL_SPI_Receive_IT(&hspi2, data, 1);
-
-	//HAL_SPI_TransmitReceive_IT(&hspi2,&txdata,&rxdata,1);
-  	//sprintf(temp,"ESP32Data=%d\n",hspi2.Instance->DR);
-	//if(index>4)index=0;
-	HAL_SPI_TransmitReceive(&hspi2,&txdata,&rxdata,1,1);
 
 
-	//index++;
-	//txdata=rxdata;
+	txdata=Response[ResponseIndex];
+	if(ResponseIndex<=50)ResponseIndex++;
+	//HAL_SPI_TransmitReceive(&hspi2,&txdata,&rxdata,1,1);
+	hspi2.Instance->DR=txdata;
+	PacketCompleted(hspi2.Instance->DR);
+
+
 	//sprintf(temp,"ESP32Data=%x\n",rxdata);
 	//HAL_UART_Transmit(&huart3, temp, sizeof(temp), HAL_MAX_DELAY);
-	PacketCompleted(rxdata);
+
   	  /* USER CODE END SPI2_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi2);
+ // HAL_SPI_IRQHandler(&hspi2);
 
   /* USER CODE BEGIN SPI2_IRQn 1 */
 
