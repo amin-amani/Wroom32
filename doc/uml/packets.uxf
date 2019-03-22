@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><diagram program="umlet" version="13.3">
+  <zoom_level>9</zoom_level>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>144</x>
+      <y>378</y>
+      <w>126</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>0x7e(start/end)
+bg=green</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>333</x>
+      <y>378</y>
+      <w>135</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>0x01(ssid )
+bg=orange</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>270</x>
+      <y>378</y>
+      <w>63</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>Len
+bg=red</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>468</x>
+      <y>378</y>
+      <w>117</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>SSID n bytes
+bg=blue</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>675</x>
+      <y>378</y>
+      <w>90</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>0x7e
+bg=green</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>585</x>
+      <y>378</y>
+      <w>90</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>CRC 2 bytes
+bg=pink</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>45</x>
+      <y>387</y>
+      <w>117</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;110.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>144</x>
+      <y>234</y>
+      <w>126</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>0x7e(start/end)
+bg=green</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>270</x>
+      <y>234</y>
+      <w>63</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>Len
+bg=red</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>333</x>
+      <y>234</y>
+      <w>135</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>Command
+bg=orange</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>54</x>
+      <y>243</y>
+      <w>108</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>100.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>468</x>
+      <y>234</y>
+      <w>90</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>CRC 2 bytes
+bg=pink</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLObject</id>
+    <coordinates>
+      <x>558</x>
+      <y>234</y>
+      <w>90</w>
+      <h>36</h>
+    </coordinates>
+    <panel_attributes>0x7e
+bg=green</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

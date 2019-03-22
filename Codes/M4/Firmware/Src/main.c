@@ -61,7 +61,9 @@ static void MX_NVIC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t RxBuffer[10];
+uint8_t TxBuffer[10];
+HAL_StatusTypeDef SPIStatus;
 /* USER CODE END 0 */
 
 /**
@@ -83,6 +85,7 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI2_Init();
   MX_USART3_UART_Init();
+  BufferInit();
 
   /* USER CODE END Init */
 
@@ -105,8 +108,10 @@ __HAL_SPI_ENABLE(&hspi2);
   {
 	  GPIOD->ODR^=1<<13;
 
-//	  sprintf(temp_main,"num=%d",12);
-//	  HAL_UART_Transmit(&huart3, temp_main, sizeof(temp_main), HAL_MAX_DELAY);
+
+
+	  //sprintf(temp_main,"Status=%d\n",SPIStatus);
+	  //HAL_UART_Transmit(&huart3, temp_main, sizeof(temp_main), HAL_MAX_DELAY);
 	  HAL_Delay(300);
     /* USER CODE END WHILE */
 

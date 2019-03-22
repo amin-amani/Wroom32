@@ -21,8 +21,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "CircularBuffer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+ CircularBuffer SpiBuffer;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -190,7 +192,24 @@ void SysTick_Handler(void)
 
   /* USER CODE END SysTick_IRQn 1 */
 }
+void BufferInit()
+{
+	SpiBuffer=CircularBufferCreate(6);
+}
+int PacketCompleted(uint8_t data)
+{
+	 uint8_t commandBuffer[6];
+	 char temp[50];
 
+    CircularBufferPush(SpiBuffer,&data, 1 );
+    CircularBufferRead(SpiBuffer,CircularBufferGetDataSize(SpiBuffer),&commandBuffer[0]);
+	if(commandBuffer[0]==0x7e && commandBuffer[5]==0x7e ){
+    sprintf(temp,"Data=%x %x %x %x %x %x\n",commandBuffer[0],commandBuffer[1],commandBuffer[2],commandBuffer[3],commandBuffer[4],commandBuffer[5]);
+	HAL_UART_Transmit(&huart3, temp, strlen(temp), HAL_MAX_DELAY);
+	}
+
+
+}
 /******************************************************************************/
 /* STM32F4xx Peripheral Interrupt Handlers                                    */
 /* Add here the Interrupt Handlers for the used peripherals.                  */
@@ -204,19 +223,28 @@ void SysTick_Handler(void)
 void SPI2_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI2_IRQn 0 */
-char temp[15];
-uint8_t txdata=190;
-uint8_t rxdata=0;
+
+
+
+
+	uint8_t rxdata;
+	uint8_t txdata;
+
+
 	GPIOD->ODR^=1<<12;
 	//HAL_SPI_Receive_IT(&hspi2, data, 1);
 
 	//HAL_SPI_TransmitReceive_IT(&hspi2,&txdata,&rxdata,1);
-  	  //sprintf(temp,"ESP32Data=%d\n",hspi2.Instance->DR);
+  	//sprintf(temp,"ESP32Data=%d\n",hspi2.Instance->DR);
+	//if(index>4)index=0;
+	HAL_SPI_TransmitReceive(&hspi2,&txdata,&rxdata,1,1);
 
-	HAL_SPI_TransmitReceive(&hspi2,&txdata,&rxdata,1,10);
-	sprintf(temp,"ESP32Data=%d\n",rxdata);
-	HAL_UART_Transmit(&huart3, temp, sizeof(temp), HAL_MAX_DELAY);
 
+	//index++;
+	//txdata=rxdata;
+	//sprintf(temp,"ESP32Data=%x\n",rxdata);
+	//HAL_UART_Transmit(&huart3, temp, sizeof(temp), HAL_MAX_DELAY);
+	PacketCompleted(rxdata);
   	  /* USER CODE END SPI2_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi2);
 
