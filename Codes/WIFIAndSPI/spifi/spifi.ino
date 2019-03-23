@@ -13,13 +13,25 @@
  * 
  * created 30/04/2018 by Alistair Symonds
  */
+ 
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiAP.h>
 #include <SPI.h>
+
+#define LED_BUILTIN 2   // Set the GPIO pin where you connected your test LED or comment this line out if your dev board has a built-in LED
 
 static const int spiClk = 500000; // 1 MHz
 //static const int spiClk = 1000000; // 1 MHz
 //uninitalised pointers to SPI objects
 SPIClass * vspi = NULL;
+WiFiServer server(80);
+ char pass[30];
+  char ssid[20]; 
 //=====================================================================================
+
+
+
 void SpiInit()
 {
   vspi = new SPIClass(VSPI);
@@ -35,17 +47,13 @@ void SpiInit()
 //=====================================================================================
 byte SpiSendByte(byte data)
 {
-  byte result=0;   
-
-      
+byte result=0;   
 digitalWrite(5, LOW); //pull SS slow to prep other end for transfer        
-  vspi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
-  result=vspi->transfer(data);    
-  delay(80);
-    vspi->endTransaction(); 
-     digitalWrite(5, HIGH); //pull ss high to signify end of data transfer
-
-
+vspi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+result=vspi->transfer(data);    
+delay(80);
+vspi->endTransaction(); 
+digitalWrite(5, HIGH); //pull ss high to signify end of data transfer
 return result;
 
   }
@@ -53,29 +61,16 @@ return result;
  void SpiSendBytes(byte *data,byte*recivedData,int len)
 {
   byte result=0;   
-
-
   for(int i=0;i<len;i++)
     {  
-      
-digitalWrite(5, LOW); //pull SS slow to prep other end for transfer     
-
-    
+  digitalWrite(5, LOW); //pull SS slow to prep other end for transfer     
   vspi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
-
   recivedData[i]=vspi->transfer(data[i]);    
   delay(80);
-    vspi->endTransaction(); 
-     digitalWrite(5, HIGH); //pull ss high to signify end of data transfer
-
-
+  vspi->endTransaction(); 
+  digitalWrite(5, HIGH); //pull ss high to signify end of data transfer
   } 
-
-    
   
-
-  
-
   }
   //=====================================================================================
  void SpiReadBytes(byte*recivedData,int len)
@@ -93,7 +88,7 @@ digitalWrite(5, LOW); //pull SS slow to prep other end for transfer
   }
   }
 //=====================================================================================
-void GetSSID(byte *response)
+byte GetSSID(byte *response)
 {
   byte packet[6]={0x7e,6,1,0,0,0x7e};
 
@@ -110,14 +105,14 @@ void GetSSID(byte *response)
   {
   sprintf(temp,"invalid=%d\n",sof);
   Serial.println(temp);
-  return;
+  return 0;
     }
   packetLen=SpiSendByte(0xff);
   delay(100);
   //sprintf(temp,"packet len=%d \n",packetLen);
   //Serial.println(temp);
   
-  if(packetLen>=100 || packetLen<3){Serial.println("invalid len\n");return;}
+  if(packetLen>=100 || packetLen<3){Serial.println("invalid len\n");return 0;}
   SpiSendByte(0xff);//read command
   delay(100);
 
@@ -125,10 +120,10 @@ void GetSSID(byte *response)
   response[packetLen-4]=0;
 
     
- 
+ return 1;
   }  
 //=====================================================================================
-void  GetWifiPassword(byte *response)
+byte  GetWifiPassword(byte *response)
 {
   byte packet[6]={0x7e,6,2,0,0,0x7e};
 
@@ -145,47 +140,158 @@ void  GetWifiPassword(byte *response)
   {
   sprintf(temp,"invalid=%d\n",sof);
   Serial.println(temp);
-  return;
+  return 0;
     }
   packetLen=SpiSendByte(0xff);
   delay(100);
   //sprintf(temp,"packet len=%d \n",packetLen);
   //Serial.println(temp);
   
-  if(packetLen>=100 || packetLen<3){Serial.println("invalid len\n");return;}
+  if(packetLen>=100 || packetLen<3){Serial.println("invalid len\n");return 0;}
   SpiSendByte(0xff);//read command
   delay(100);
 
   SpiReadBytes(response,packetLen-4);
   response[packetLen-4]=0;
-
-    
- 
+  return 1;
+  
   }
 //=====================================================================================
-void WaitForWifiSettings()
+byte WaitForWifiSettings()
 {
 
+ 
+ if(!GetSSID((byte*)ssid))return 0;
+ if(!GetWifiPassword((byte*)pass))return 0;
+ return 1;
+ 
   
 }
 //=====================================================================================
+
+void WIFIInit()
+{
+  // You can remove the password parameter if you want the AP to be open.
+  WiFi.softAP(ssid, pass);
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+  server.begin();
+
+  Serial.println("Server started");  
+  
+  }
+
+//=====================================================================================
+
+void WIFIClientHandler()
+{
+  
+    WiFiClient client = server.available();   // listen for incoming clients
+int ledFlag=1;
+  if (client) {                             // if you get a client,
+    Serial.println("New Client.");           // print a message out the serial port
+    digitalWrite(LED_BUILTIN, HIGH); 
+    while (client.connected()) {            // loop while the client's connected
+      if (client.available()) {             // if there's bytes to read from the client,
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+        SpiSendByte(c);
+        ledFlag=!ledFlag;
+        digitalWrite(LED_BUILTIN, ledFlag);              
+
+      }//if client avaliable
+    }//while client connected
+    // close the connection:
+    client.stop();
+    digitalWrite(LED_BUILTIN, LOW);
+    Serial.println("Client Disconnected.");
+  }
+  
+  
+  }
+
+  
+//=====================================================================================
+
+void WIFIClientHandler2()
+{
+  
+    WiFiClient client = server.available();   // listen for incoming clients
+
+  if (client) {                             // if you get a client,
+    Serial.println("New Client.");           // print a message out the serial port
+    String currentLine = "";                // make a String to hold incoming data from the client
+    while (client.connected()) {            // loop while the client's connected
+      if (client.available()) {             // if there's bytes to read from the client,
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+        if (c == '\n') {                    // if the byte is a newline character
+
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+          if (currentLine.length() == 0) {
+            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+            // and a content-type so the client knows what's coming, then a blank line:
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
+            client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+
+            // The HTTP response ends with another blank line:
+            client.println();
+            // break out of the while loop:
+            break;
+          } else {    // if you got a newline, then clear currentLine:
+            currentLine = "";
+          }
+        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          currentLine += c;      // add it to the end of the currentLine
+        }
+
+        // Check to see if the client request was "GET /H" or "GET /L":
+        if (currentLine.endsWith("GET /H")) {
+          digitalWrite(LED_BUILTIN, HIGH);               // GET /H turns the LED on
+        }
+        if (currentLine.endsWith("GET /L")) {
+          digitalWrite(LED_BUILTIN, LOW);                // GET /L turns the LED off
+        }
+      }
+    }
+    // close the connection:
+    client.stop();
+    Serial.println("Client Disconnected.");
+  }
+  
+  
+  }
+  
+//=====================================================================================
 void setup() {
-  //initialise two instances of the SPIClass attached to VSPI and HSPI respectively
+    pinMode(LED_BUILTIN, OUTPUT);
   SpiInit();
- // WaitForWifiSettings();
+  while(!WaitForWifiSettings())
+  {
+  delay(1000);
+  }
+
+  Serial.println("wifi setings completed\n");
+  Serial.println(ssid);
+  Serial.println(pass);
+    WIFIInit();
+ 
 
 }
 //=====================================================================================
 // the loop function runs over and over again until power down or reset
 void loop() {
   //use the SPI buses
-  char pass[30];
-  char ssid[20]; 
-  GetSSID((byte*)ssid);
-  GetWifiPassword((byte*)pass);
+WIFIClientHandler();
   //free ssid;
   //sprintf(temp,"ssid=%s\n",(char*)ssid);
-  Serial.println(ssid);
-    Serial.println(pass);
-  delay(1000);
+
+
 }
