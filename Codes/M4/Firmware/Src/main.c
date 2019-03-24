@@ -85,8 +85,12 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI2_Init();
   MX_USART3_UART_Init();
-  BufferInit();
-
+ // BufferInit();
+  WIFIModuleInit();
+  WIFIModuleSetWIFIName("Amin");
+  WIFIModuleSetWIFIPassword("PASSWORD");
+  //SetWIFISSID("NAME");
+  //SetWIFIPassword("PASSWORD");
   /* USER CODE END Init */
 
   /* USER CODE BEGIN SysInit */
