@@ -6,14 +6,19 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "SpiHandler.h"
 #define GPIO_HANDSHAKE 2
 #define GPIO_MOSI 23
 #define GPIO_MISO 19
 #define GPIO_SCLK 18
 #define GPIO_CS 5
 
+SpiHandler *handler;
+void callback(char*data,int len)
+{
+printf("callback...\n");
 
-
+}
 void prvTaskA (void* pvParameters)
 {		
     (void) pvParameters;                    // Just to stop compiler warnings.
@@ -40,6 +45,7 @@ void app_main()
 {
     int n=0;
     esp_err_t ret;
+    //SpiHandler sp;
 
     //Configuration for the SPI bus
     spi_bus_config_t buscfg={
@@ -85,7 +91,14 @@ void app_main()
     memset(&t, 0, sizeof(t));
     printf("Start...\n");
     vTaskDelay(4000 / portTICK_PERIOD_MS);
+handler=CreateSpiHandler(callback);
 
+  while(1){
+      DataReceived(handler,"salam",2);
+      vTaskDelay(500);
+
+  
+  }
     xTaskCreate( prvTaskA, "TaskA", configMINIMAL_STACK_SIZE, NULL,
                             tskIDLE_PRIORITY, ( xTaskHandle * ) NULL );
     while(1){
