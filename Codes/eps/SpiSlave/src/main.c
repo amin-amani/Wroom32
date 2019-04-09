@@ -14,6 +14,16 @@
 
 
 
+void prvTaskA (void* pvParameters)
+{		
+    (void) pvParameters;                    // Just to stop compiler warnings.
+	
+    for (;;) {
+       //vTaskDelay(500);
+        printf("Task A\n");
+        vTaskDelay(100);
+    }
+}
 
 
 //Called after a transaction is queued and ready for pickup by master. We use this to set the handshake line high.
@@ -73,12 +83,11 @@ void app_main()
     memset(recvbuf, 0, 33);
     spi_slave_transaction_t t;
     memset(&t, 0, sizeof(t));
+    printf("Start...\n");
     vTaskDelay(4000 / portTICK_PERIOD_MS);
-    printf("p1\n");
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
-        printf("p2\n");
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            printf("p3\n");
+
+    xTaskCreate( prvTaskA, "TaskA", configMINIMAL_STACK_SIZE, NULL,
+                            tskIDLE_PRIORITY, ( xTaskHandle * ) NULL );
     while(1){
           //Clear receive buffer, set send buffer to something sane
         memset(recvbuf, 0xA5, 129);
