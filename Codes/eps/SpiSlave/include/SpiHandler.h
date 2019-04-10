@@ -1,17 +1,34 @@
 
 #ifndef __SPI__HANDLER
 #define __SPI__HANDLER
+#include <stdint.h>
 
-typedef struct  SpiHandler {
-   int x;
-   int y;
+typedef struct 
+{
+  
+  uint8_t StartOfPacket;
+  uint8_t Command;
+  uint8_t FrameNumber;
+  uint8_t Datalen;
+  char Data[12];
+  uint8_t CRC;
+  uint8_t EndOfPacket;
    
-   void (*SendToSPI)(char*data,int len);
-   void (*SendToWIFI)(char*data,int len);
+}SPIPacketType;
+
+typedef struct SpiHandler SpiHandler;
+
+ struct  SpiHandler {
+
+   void (*FunctionList[2])(char *data,int len);
+   void (*SPIDataReadyCallback)(char*data,int len);
+   void (*WIFIDataReadyCallback)(char*data,int len);
+   void (*ProcessData)(SpiHandler * self,char*data,int len);
    
-}SpiHandler;
+};
 //struct SpiHandler;  // forward declared for encapsulation
-void DataReceived(SpiHandler * self,char*data,int len);
- SpiHandler* CreateSpiHandler(void (*callback)(char*data,int len));  // equivalent to "new Point(x, y)"
- 
+
+// SpiHandler* CreateSpiHandler(void (*callback)(char*data,int len));  // equivalent to "new Point(x, y)"
+ SpiHandler* CreateSpiHandler();
+ void SpiHandlerInit(SpiHandler*self);
 #endif

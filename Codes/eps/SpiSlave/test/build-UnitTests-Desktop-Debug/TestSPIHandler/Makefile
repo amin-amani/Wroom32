@@ -48,10 +48,8 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp \
-		../../../src/SpiHandler.c 
-OBJECTS       = tst_canpassdata.o \
-		SpiHandler.o
+SOURCES       = ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp 
+OBJECTS       = tst_canpassdata.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -69,7 +67,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus_private.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_declarative.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designercomponents_private.pri \
@@ -143,8 +140,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../../UnitTests/TestSPIHandler/TestSPIHandler.pro ../../../include/SpiHandler.h ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp \
-		../../../src/SpiHandler.c
+		../../UnitTests/TestSPIHandler/TestSPIHandler.pro ../../../include/SpiHandler.h ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp
 QMAKE_TARGET  = TestSPIHandler
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = TestSPIHandler
@@ -192,7 +188,6 @@ Makefile: ../../UnitTests/TestSPIHandler/TestSPIHandler.pro /usr/lib/x86_64-linu
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus_private.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_declarative.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designercomponents_private.pri \
@@ -287,7 +282,6 @@ Makefile: ../../UnitTests/TestSPIHandler/TestSPIHandler.pro /usr/lib/x86_64-linu
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_core_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_dbus_private.pri:
-/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_declarative.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designer_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_designercomponents_private.pri:
@@ -379,7 +373,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../include/SpiHandler.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp ../../../src/SpiHandler.c $(DISTDIR)/
+	$(COPY_FILE) --parents ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -409,6 +403,7 @@ compiler_moc_source_make_all: tst_canpassdata.moc
 compiler_moc_source_clean:
 	-$(DEL_FILE) tst_canpassdata.moc
 tst_canpassdata.moc: ../../../include/SpiHandler.h \
+		../../../src/SpiHandler.c \
 		../../UnitTests/TestSPIHandler/tst_canpassdata.cpp
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/amin/Desktop/Wroom32/Codes/eps/SpiSlave/test/UnitTests/TestSPIHandler -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtTest -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp -o tst_canpassdata.moc
 
@@ -423,11 +418,9 @@ compiler_clean: compiler_moc_source_clean
 ####### Compile
 
 tst_canpassdata.o: ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp ../../../include/SpiHandler.h \
+		../../../src/SpiHandler.c \
 		tst_canpassdata.moc
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tst_canpassdata.o ../../UnitTests/TestSPIHandler/tst_canpassdata.cpp
-
-SpiHandler.o: ../../../src/SpiHandler.c 
-	$(CC) -c $(CFLAGS) $(INCPATH) -o SpiHandler.o ../../../src/SpiHandler.c
 
 ####### Install
 

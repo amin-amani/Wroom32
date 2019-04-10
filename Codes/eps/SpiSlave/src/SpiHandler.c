@@ -1,19 +1,30 @@
 #include "../include/SpiHandler.h"
 #include <stdlib.h>
+
+SPIPacketType *packet;
+
+
 //==============================================================================
-void DataReceived(SpiHandler * self,char*data,int len)
+void StartProcessData(SpiHandler * self,char*data,int len)
 {
-char dt[2];
-if(len>0) self->SendToSPI(dt,2);
+
+    SPIPacketType *packet=(SPIPacketType*)data;
+self->FunctionList[packet->Command-1](data,len);
+
+}
+//==============================================================================
+SpiHandler* CreateSpiHandler()
+{
+    SpiHandler* result = (SpiHandler*) malloc(sizeof(SpiHandler));
+    result->ProcessData=StartProcessData;
+
+
+    return result;
 }
 
  //==============================================================================
- SpiHandler* CreateSpiHandler(void (*callback)(char*data,int len))
- {
-   SpiHandler* result = (SpiHandler*) malloc(sizeof(SpiHandler));
-   //SpiHandler__init(result, x, y);
-  result->SendToSPI=callback;
-   return result;
-
+void SpiHandlerInit(SpiHandler * self)
+{
+    self->FunctionList[0]=self->SPIDataReadyCallback;
+    self->FunctionList[1]=self->WIFIDataReadyCallback;
 }
-//==============================================================================

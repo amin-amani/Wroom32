@@ -3,21 +3,24 @@
 #include "../../../src/SpiHandler.c"
 
 // add necessary includes here
-
+QString CalledFunction="";
 class CanPassData : public QObject
 {
     Q_OBJECT
-
+int val=0;
 public:
+    SpiHandler *handler;
     CanPassData();
     ~CanPassData();
 
-    static void callback(char *data, int len);
+    static void spiSendCallback(char *data, int len);
+    static void WIFISendCallback(char *data, int len);
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    void test_case1();
+    void Test_SPIPacket();
 
+    void Test_WIFIPacket();
 };
 
 CanPassData::CanPassData()
@@ -33,24 +36,46 @@ CanPassData::~CanPassData()
 void CanPassData::initTestCase()
 {
 
+    handler=CreateSpiHandler();
 }
 
 void CanPassData::cleanupTestCase()
 {
 
 }
-void CanPassData::callback(char*data,int len)
+void CanPassData::spiSendCallback(char*data,int len)
 {
 qDebug()<<"callback";
+CalledFunction="SPI";
+}
+void CanPassData::WIFISendCallback(char*data,int len)
+{
+qDebug()<<"callback";
+CalledFunction="WIFI";
+}
+
+void CanPassData::Test_WIFIPacket()
+{
+      //QSKIP("This mkacro cause skip test");
+char packet[20]={0x7e,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+handler->SPIDataReadyCallback=spiSendCallback;
+handler->WIFIDataReadyCallback=WIFISendCallback;
+SpiHandlerInit(handler);
+CalledFunction="";
+
+handler->ProcessData(handler,packet,2);
+QVERIFY(CalledFunction=="WIFI");
 
 }
-void CanPassData::test_case1()
+void CanPassData::Test_SPIPacket()
 {
-SpiHandler *handler;
-handler=CreateSpiHandler(callback);
-
-DataReceived(handler,"somting",2);
-
+char packet[20]={0x7e,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+handler->SPIDataReadyCallback=spiSendCallback;
+handler->WIFIDataReadyCallback=WIFISendCallback;
+SpiHandlerInit(handler);
+CalledFunction="";
+handler->ProcessData(handler,packet,2);
+QVERIFY(CalledFunction=="SPI");
 
 }
 
