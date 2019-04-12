@@ -1,4 +1,3 @@
-
 #ifndef __SPI__HANDLER
 #define __SPI__HANDLER
 #include <stdint.h>
@@ -23,6 +22,7 @@ typedef struct SpiHandler SpiHandler;
    void (*FunctionList[2])(char *data,int len);
    void (*SPIDataReadyCallback)(char*data,int len);
    void (*WIFIDataReadyCallback)(char*data,int len);
+   //void (*WIFIDataReadyCallback)(char*data,int len);
    void (*ProcessData)(SpiHandler * self,char*data,int len);
    
 };

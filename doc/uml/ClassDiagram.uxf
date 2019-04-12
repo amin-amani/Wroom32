@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><diagram program="umlet" version="13.3">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>180</x>
+      <y>70</y>
+      <w>330</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>SPIHanlder
+--
+-id: Long {composite}
+-ClassAttribute: Long
+--
++CreateSpiHandler()
++SPIDataReadyCallback(char*data,int len)
++SSIDReadyCallback(char*data,int len)
++PasswordReadyCallback(char*data,int len)
++SetTCPPortCallback(char*data,int len)
++StartAPReadyCallback(char*data,int len)
+--
+Responsibilities
+-- Resp1
+-- Resp2
+bg=pink</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
