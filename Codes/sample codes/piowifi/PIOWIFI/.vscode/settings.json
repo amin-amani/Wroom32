@@ -1,0 +1,9 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/amin/.platformio/penv/bin:/home/amin/.platformio/penv:/home/amin/bin:/home/amin/.local/bin:/opt/ros/kinetic/bin:/home/amin/bin:/home/amin/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/amin/android/sdk26/platform-tools:/home/amin/android/sdk26/tools:",
+        "PLATFORMIO_CALLER": "vscode"
+    },
+    "files.associations": {
+        "sockets.h": "c"
+    }
+}
