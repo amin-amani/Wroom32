@@ -41,6 +41,51 @@ const int IPV4_GOTIP_BIT = BIT0;
 const int IPV6_GOTIP_BIT = BIT1;
 
 static const char *TAG = "example";
+void Commandhandle(char*data ,int len)
+{
+if(strstr(data,"salam")>=0){strcpy(data,"alayk\n");}
+
+}
+bool TCPClientHandler(struct sockaddr_in6 sourceAddr ,char *addr_str,int listen_sock,int socket,char *rxBuffer,int buffersize)
+{
+
+            int len = recv(socket, rxBuffer, buffersize - 1, 0);
+            // Error occured during receiving
+            if (len < 0) {
+                ESP_LOGE(TAG, "recv failed: errno %d", errno);
+                return 0;
+            }
+            // Connection closed
+            else if (len == 0) {
+                ESP_LOGI(TAG, "Connection closed");
+            shutdown(socket, 0);
+            close(socket);
+             shutdown(listen_sock, 0);
+            close(listen_sock);
+                return 0;
+            }
+            // Data received
+            else {
+                // Get the sender's ip address as string
+                if (sourceAddr.sin6_family == PF_INET) {
+                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                } else if (sourceAddr.sin6_family == PF_INET6) {
+                    inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+                }
+
+                rxBuffer[len] = 0; // Null-terminate whatever we received and treat like a string
+                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                ESP_LOGI(TAG, "%s", rxBuffer);
+                Commandhandle(rxBuffer,len);
+                int err = send(socket, rxBuffer, len, 0);
+                if (err < 0) {
+                    ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
+                    return 0;
+                }
+            }
+            return 1;
+
+}
 
 static void tcp_server_task(void *pvParameters)
 {
@@ -93,42 +138,46 @@ static void tcp_server_task(void *pvParameters)
         }
         ESP_LOGI(TAG, "Socket accepted");
 
-        while (1) {
-            int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-            // Error occured during receiving
-            if (len < 0) {
-                ESP_LOGE(TAG, "recv failed: errno %d", errno);
-                break;
-            }
-            // Connection closed
-            else if (len == 0) {
-                ESP_LOGI(TAG, "Connection closed");
-            shutdown(sock, 0);
-            close(sock);
-             shutdown(listen_sock, 0);
-            close(listen_sock);
-                break;
-            }
-            // Data received
-            else {
-                // Get the sender's ip address as string
-                if (sourceAddr.sin6_family == PF_INET) {
-                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-                } else if (sourceAddr.sin6_family == PF_INET6) {
-                    inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-                }
 
-                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGI(TAG, "%s", rx_buffer);
+while (TCPClientHandler(sourceAddr,addr_str,listen_sock,sock,rx_buffer,sizeof(rx_buffer)));
 
-                int err = send(sock, rx_buffer, len, 0);
-                if (err < 0) {
-                    ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-                    break;
-                }
-            }
-        }
+
+        // while (1) {
+        //     int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+        //     // Error occured during receiving
+        //     if (len < 0) {
+        //         ESP_LOGE(TAG, "recv failed: errno %d", errno);
+        //         break;
+        //     }
+        //     // Connection closed
+        //     else if (len == 0) {
+        //         ESP_LOGI(TAG, "Connection closed");
+        //     shutdown(sock, 0);
+        //     close(sock);
+        //      shutdown(listen_sock, 0);
+        //     close(listen_sock);
+        //         break;
+        //     }
+        //     // Data received
+        //     else {
+        //         // Get the sender's ip address as string
+        //         if (sourceAddr.sin6_family == PF_INET) {
+        //             inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+        //         } else if (sourceAddr.sin6_family == PF_INET6) {
+        //             inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+        //         }
+
+        //         rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
+        //         ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+        //         ESP_LOGI(TAG, "%s", rx_buffer);
+        //         Commandhandle(rx_buffer,len);
+        //         int err = send(sock, rx_buffer, len, 0);
+        //         if (err < 0) {
+        //             ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
+        //             break;
+        //         }
+        //     }
+        // }//end lastwhile 
 
         if (sock != -1) {
             ESP_LOGE(TAG, "Shutting down socket and restarting...");
@@ -136,7 +185,7 @@ static void tcp_server_task(void *pvParameters)
             close(sock);
         
         }
-            //break;//by me 
+    
      
     }
 
@@ -175,54 +224,13 @@ firstTime=false;
     return ESP_OK;
 }
 
-// static esp_err_t event_handler(void *ctx, system_event_t *event)
-// {
-//     switch (event->event_id) {
-//     case SYSTEM_EVENT_STA_START:
-//         esp_wifi_connect();
-//         ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
-//         break;
-//     case SYSTEM_EVENT_STA_CONNECTED:
-//         /* enable ipv6 */
-//         tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
-//         break;
-//     case SYSTEM_EVENT_STA_GOT_IP:
-//         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
-//         ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
-//         break;
-//     case SYSTEM_EVENT_STA_DISCONNECTED:
-//         /* This is a workaround as ESP32 WiFi libs don't currently auto-reassociate. */
-//         esp_wifi_connect();
-//         xEventGroupClearBits(wifi_event_group, IPV4_GOTIP_BIT);
-//         xEventGroupClearBits(wifi_event_group, IPV6_GOTIP_BIT);
-//         break;
-//     case SYSTEM_EVENT_AP_STA_GOT_IP6:
-//         xEventGroupSetBits(wifi_event_group, IPV6_GOTIP_BIT);
-//         ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP6");
-
-//         char *ip6 = ip6addr_ntoa(&event->event_info.got_ip6.ip6_info.ip);
-//         ESP_LOGI(TAG, "IPv6: %s", ip6);
-//     default:
-//         break;
-//     }
-//     return ESP_OK;
-// }
 
 static void initialise_wifi(void)
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    // wifi_config_t wifi_config = {
-    //     .sta = {
-    //         .ssid = EXAMPLE_WIFI_SSID,
-    //         .password = EXAMPLE_WIFI_PASS,
-            
-    //     },
-    // };
+
 
 
 //==============
@@ -238,9 +246,7 @@ wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
             .authmode = WIFI_AUTH_OPEN// WIFI_AUTH_WPA_WPA2_PSK
         },
     };
-    // if (strlen(EXAMPLE_WIFI_PASS) == 0) {
-    //     wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-    // }
+
 //===============
 
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
@@ -263,7 +269,5 @@ void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
-//    wait_for_ip();
 
-    //xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
 }
