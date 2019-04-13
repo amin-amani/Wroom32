@@ -32,7 +32,8 @@
 #define EXAMPLE_WIFI_PASS ""
 
 #define PORT 8888
-bool firstTime=true;
+
+int ConnectedSocket=-1;
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -41,14 +42,14 @@ const int IPV4_GOTIP_BIT = BIT0;
 const int IPV6_GOTIP_BIT = BIT1;
 
 static const char *TAG = "example";
-void Commandhandle(char*data ,int len)
+char* CommandHandle(char*data ,int len)
 {
 if(strstr(data,"salam")>=0){strcpy(data,"alayk\n");}
-
+return data;
 }
-bool TCPClientHandler(struct sockaddr_in6 sourceAddr ,char *addr_str,int listen_sock,int socket,char *rxBuffer,int buffersize)
-{
-
+bool TCPClientHandler(struct sockaddr_in6 sourceAddr ,int listen_sock,int socket,char *rxBuffer,int buffersize)
+{ 
+            char addrstr[16];
             int len = recv(socket, rxBuffer, buffersize - 1, 0);
             // Error occured during receiving
             if (len < 0) {
@@ -56,7 +57,7 @@ bool TCPClientHandler(struct sockaddr_in6 sourceAddr ,char *addr_str,int listen_
                 return 0;
             }
             // Connection closed
-            else if (len == 0) {
+             if (len == 0) {
                 ESP_LOGI(TAG, "Connection closed");
             shutdown(socket, 0);
             close(socket);
@@ -65,24 +66,24 @@ bool TCPClientHandler(struct sockaddr_in6 sourceAddr ,char *addr_str,int listen_
                 return 0;
             }
             // Data received
-            else {
+       
                 // Get the sender's ip address as string
                 if (sourceAddr.sin6_family == PF_INET) {
-                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addrstr, sizeof(addrstr) - 1);
                 } else if (sourceAddr.sin6_family == PF_INET6) {
-                    inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+                    inet6_ntoa_r(sourceAddr.sin6_addr, addrstr, sizeof(addrstr) - 1);
                 }
 
                 rxBuffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addrstr);
                 ESP_LOGI(TAG, "%s", rxBuffer);
-                Commandhandle(rxBuffer,len);
-                int err = send(socket, rxBuffer, len, 0);
+              
+                int err = send(socket,CommandHandle(rxBuffer,len), len, 0);
                 if (err < 0) {
                     ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
                     return 0;
                 }
-            }
+            
             return 1;
 
 }
@@ -91,8 +92,7 @@ static void tcp_server_task(void *pvParameters)
 {
     char rx_buffer[128];
     char addr_str[128];
-    int addr_family;
-    int ip_protocol;
+
 
     while (1) {
 
@@ -102,11 +102,10 @@ static void tcp_server_task(void *pvParameters)
         destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
         destAddr.sin_family = AF_INET;
         destAddr.sin_port = htons(PORT);
-        addr_family = AF_INET;
-        ip_protocol = IPPROTO_IP;
+
         inet_ntoa_r(destAddr.sin_addr, addr_str, sizeof(addr_str) - 1);
 
-        int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
+        int listen_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
         if (listen_sock < 0) {
             ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
             break;
@@ -135,55 +134,20 @@ static void tcp_server_task(void *pvParameters)
         if (sock < 0) {
             ESP_LOGE(TAG, "Unable to accept connection: errno %d", errno);
             break;
+
         }
         ESP_LOGI(TAG, "Socket accepted");
 
+ConnectedSocket=sock;
+while (TCPClientHandler(sourceAddr,listen_sock,sock,rx_buffer,sizeof(rx_buffer)));
 
-while (TCPClientHandler(sourceAddr,addr_str,listen_sock,sock,rx_buffer,sizeof(rx_buffer)));
 
-
-        // while (1) {
-        //     int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-        //     // Error occured during receiving
-        //     if (len < 0) {
-        //         ESP_LOGE(TAG, "recv failed: errno %d", errno);
-        //         break;
-        //     }
-        //     // Connection closed
-        //     else if (len == 0) {
-        //         ESP_LOGI(TAG, "Connection closed");
-        //     shutdown(sock, 0);
-        //     close(sock);
-        //      shutdown(listen_sock, 0);
-        //     close(listen_sock);
-        //         break;
-        //     }
-        //     // Data received
-        //     else {
-        //         // Get the sender's ip address as string
-        //         if (sourceAddr.sin6_family == PF_INET) {
-        //             inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-        //         } else if (sourceAddr.sin6_family == PF_INET6) {
-        //             inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-        //         }
-
-        //         rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-        //         ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-        //         ESP_LOGI(TAG, "%s", rx_buffer);
-        //         Commandhandle(rx_buffer,len);
-        //         int err = send(sock, rx_buffer, len, 0);
-        //         if (err < 0) {
-        //             ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
-        //             break;
-        //         }
-        //     }
-        // }//end lastwhile 
 
         if (sock != -1) {
             ESP_LOGE(TAG, "Shutting down socket and restarting...");
             shutdown(sock, 0);
             close(sock);
-        
+        ConnectedSocket=1;
         }
     
      
@@ -200,8 +164,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
                  MAC2STR(event->event_info.sta_connected.mac),
                  event->event_info.sta_connected.aid);
-if(firstTime)
-firstTime=false;
+
  
         break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
@@ -267,7 +230,17 @@ static void wait_for_ip()
 
 void app_main()
 {
+    char data[6]={'s','a','l','a','m','\n'};
     ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
+    while (true)
+    {
+        if(ConnectedSocket>0)
+        send(ConnectedSocket,data, 6, 0);
+
+        sys_delay_ms(500);
+        //send(ConnectedSocket,data,5);
+    }
+    
 
 }
