@@ -9,6 +9,7 @@ void StartProcessData(SpiHandler * self,char*data,int len)
 {
 
     SPIPacketType *packet=(SPIPacketType*)data;
+    if(packet->Command==1 || packet->Command==2)
     self->FunctionList[packet->Command-1](data,len);
 
 }
