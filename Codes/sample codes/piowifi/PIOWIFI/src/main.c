@@ -52,7 +52,7 @@ void app_main()
     ESP_ERROR_CHECK( nvs_flash_init() );
     TCPNewClientConnectedCallback=TCPServerNewClientConnected;
     TCPServerNewDataReceivedCallback=TCPServerDataReceived;
-    TCPServerInit();
+    TCPServerInit("aminfi","");
 
     while (true)
     {

@@ -7,14 +7,43 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "SpiHandler.h"
+#include "TCPServer.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+
+
 #define GPIO_HANDSHAKE 2
 #define GPIO_MOSI 23
 #define GPIO_MISO 19
 #define GPIO_SCLK 18
 #define GPIO_CS 5
-
+//------------------------------------------------------------------------------------
 SpiHandler *Spiparser;
 
+
+//========================================================================================
+static void TCPServerTask(void *pvParameters)
+{
+    ESP_LOGE("example:", "Create task"); 
+    TCPServerStartListen();
+    ESP_LOGE("example:", "Delete task");  
+    vTaskDelete(NULL);
+}
+//========================================================================================
+void TCPServerNewClientConnected()
+{
+    xTaskCreate(TCPServerTask, "tcp_server", 4096, NULL, 5, NULL);  
+
+}
+//========================================================================================
+void TCPServerDataReceived(char *data,int len)
+{
+        ESP_LOGI("newData", "datacallback=%s", data);
+        TCPServerSendData("salam",5);
+
+
+}
+//========================================================================================
 void prvTaskA (void* pvParameters)
 {		
     (void) pvParameters;                    // Just to stop compiler warnings.
@@ -25,22 +54,30 @@ void prvTaskA (void* pvParameters)
         vTaskDelay(100);
     }
 }
-
+//========================================================================================
 
 //Called after a transaction is queued and ready for pickup by master. We use this to set the handshake line high.
 void my_post_setup_cb(spi_slave_transaction_t *trans) {
     WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<GPIO_HANDSHAKE));
 }
-
+//========================================================================================
 //Called after transaction is sent/received. We use this to set the handshake line low.
 void my_post_trans_cb(spi_slave_transaction_t *trans) {
     WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<GPIO_HANDSHAKE));
 }
 
+void WIFIDataReady(char*data,int len) {
+TCPServerSendData(data,len);
+}
+//========================================================================================
 void app_main()
 {
-Spiparser=CreateSpiHandler();
+    
+    ESP_ERROR_CHECK( nvs_flash_init() );
+    Spiparser=CreateSpiHandler();
 
+    Spiparser->WIFIDataReadyCallback=WIFIDataReady;
+    SpiHandlerInit(Spiparser);
 
     int n=0;
     esp_err_t ret;
@@ -89,6 +126,9 @@ Spiparser=CreateSpiHandler();
     memset(&t, 0, sizeof(t));
     printf("Start...\n");
     vTaskDelay(4000 / portTICK_PERIOD_MS);
+    TCPNewClientConnectedCallback=TCPServerNewClientConnected;
+    TCPServerNewDataReceivedCallback=TCPServerDataReceived;
+    TCPServerInit("mainwifi","");
 
     // xTaskCreate( prvTaskA, "TaskA", configMINIMAL_STACK_SIZE, NULL,
     //                         tskIDLE_PRIORITY, ( xTaskHandle * ) NULL );
@@ -108,12 +148,15 @@ Spiparser=CreateSpiHandler();
         data.
         */
         ret=spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
-
+        recvbuf[1]=2;
+        Spiparser->ProcessData(Spiparser,recvbuf,20);
         //spi_slave_transmit does not return until the master has done a transmission, so by here we have sent our data and
         //received data from the master. Print it.
+        //TCPServerSendData(recvbuf,strlen(recvbuf));
+
         printf("Received: %s\n", recvbuf);
         n++;
     }
     
 }
-
+//========================================================================================

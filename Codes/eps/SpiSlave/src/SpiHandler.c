@@ -9,7 +9,7 @@ void StartProcessData(SpiHandler * self,char*data,int len)
 {
 
     SPIPacketType *packet=(SPIPacketType*)data;
-self->FunctionList[packet->Command-1](data,len);
+    self->FunctionList[packet->Command-1](data,len);
 
 }
 //==============================================================================
