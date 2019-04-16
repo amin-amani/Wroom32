@@ -63,7 +63,9 @@ void TCPServerDataReceived(char *data,int len)
 //========================================================================================
 void TCPSend(char*data,int len) 
 {
+//char temp[12];
 ESP_LOGI("tcp send:","%s -> %d",data,len);
+//strcpy(temp,"abcdefghijkl");
 TCPServerSendData(data,len);
 }
 //========================================================================================

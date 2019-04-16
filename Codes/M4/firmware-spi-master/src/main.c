@@ -125,7 +125,7 @@ MX_USART3_UART_Init();
   HAL_Delay(1000);
   StartAp();  
     HAL_Delay(1000);
-    SendTCP("1234567890",10);
+    SendTCP("1234567890UV",12);
   //HAL_UART_Transmit(&huart3,rxd,20,10);
   HAL_Delay(1000);
 //GPIOB->ODR^=1<<9;
