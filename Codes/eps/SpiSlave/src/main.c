@@ -19,8 +19,11 @@
 #define GPIO_CS 5
 //------------------------------------------------------------------------------------
 SpiHandler *Spiparser;
-    char sendbuf[20]="";
-    char recvbuf[20]="";
+char SPITxBuffer[20]="";
+char SPIRxBuffer[20]="";
+char WIFIRxBuffer[20]="";
+
+
 
 //========================================================================================
 static void TCPServerTask(void *pvParameters)
@@ -31,26 +34,52 @@ static void TCPServerTask(void *pvParameters)
     vTaskDelete(NULL);
 }
 //========================================================================================
+void TCPServerStartAP(char *data,int len)
+{
+ESP_LOGI("start ap","%d",0);
+}
+//========================================================================================
+void TCPServerSetPassword(char *data,int len)
+{
+ESP_LOGI("set pass:","%s",data);
+}
+//========================================================================================
+void TCPServerSetSSID(char *data,int len)
+{
+    ESP_LOGI("set ssid:","%s",data);
+}
+//========================================================================================
 void TCPServerNewClientConnected()
 {
     xTaskCreate(TCPServerTask, "tcp_server", 4096, NULL, 5, NULL);  
-
 }
 //========================================================================================
 void TCPServerDataReceived(char *data,int len)
 {
-        ESP_LOGI("newData", "datacallback=%s", data);
-memcpy(sendbuf,data,len);
-
+    ESP_LOGI("newData", "datacallback=%s", data);
+    memset(WIFIRxBuffer, 0, sizeof(WIFIRxBuffer));
+    memcpy(WIFIRxBuffer,data,len);
+}
+//========================================================================================
+void TCPSend(char*data,int len) 
+{
+ESP_LOGI("tcp send:","%s -> %d",data,len);
+TCPServerSendData(data,len);
+}
+//========================================================================================
+void TCPServerReadData(char*data,int len)
+{
+            ESP_LOGI("read sata:","%s -> %d",data,len);
+    memset(SPITxBuffer, 0, 20);
+    memcpy(SPITxBuffer,WIFIRxBuffer,sizeof(WIFIRxBuffer));
 
 }
 //========================================================================================
-
-void SPIDataReady(char*data,int len)
+void SPISendData(char*data,int len)
 {
-    memset(sendbuf, 0, 20);
-    memcpy(sendbuf,data,len);
-    //sprintf(sendbuf, "%s",data);
+   ESP_LOGI("spi end:","%s -> %d",data,len);
+    memset(SPITxBuffer, 0, 20);
+    memcpy(SPITxBuffer,data,len);
 }
 
 //========================================================================================
@@ -65,21 +94,14 @@ void prvTaskA (void* pvParameters)
     }
 }
 //========================================================================================
-
-//Called after a transaction is queued and ready for pickup by master. We use this to set the handshake line high.
 void my_post_setup_cb(spi_slave_transaction_t *trans) {
     WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<GPIO_HANDSHAKE));
 }
 //========================================================================================
-//Called after transaction is sent/received. We use this to set the handshake line low.
 void my_post_trans_cb(spi_slave_transaction_t *trans) {
     WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<GPIO_HANDSHAKE));
 }
-//========================================================================================
 
-void WIFIDataReady(char*data,int len) {
-TCPServerSendData(data,len);
-}
 //========================================================================================
 void SPIInit()
 {
@@ -128,14 +150,19 @@ void app_main()
     esp_err_t ret; 
 
     spi_slave_transaction_t t;
-     memset(recvbuf, 0, 20);
+     memset(SPIRxBuffer, 0, 20);
     memset(&t, 0, sizeof(t));
 
     ESP_ERROR_CHECK( nvs_flash_init() );
     Spiparser=CreateSpiHandler();
 
-    Spiparser->WIFIDataReadyCallback=WIFIDataReady;
-    Spiparser->SPIDataReadyCallback=SPIDataReady;
+    Spiparser->WIFISendDataCallback=TCPSend;
+    Spiparser->SPISendDataCallback=SPISendData;
+    Spiparser->WIFIReadDataCallback=TCPServerReadData;
+    Spiparser->WIFISetPasswordCallback=TCPServerSetPassword;
+    Spiparser->WIFISetSSIDCallback=TCPServerSetSSID;
+    Spiparser->WIFIStartApCallback=TCPServerStartAP;
+    
     
     SpiHandlerInit(Spiparser);
 
@@ -143,26 +170,17 @@ void app_main()
     TCPNewClientConnectedCallback=TCPServerNewClientConnected;
     TCPServerNewDataReceivedCallback=TCPServerDataReceived;
     TCPServerInit("mainwifi","");
-    memset(recvbuf, 0, 20);
-    sprintf(sendbuf,"%s", "init response"); 
+    memset(SPIRxBuffer, 0, 20);
+    sprintf(SPITxBuffer,"%s", "init response"); 
     t.length=20*8;
-    t.tx_buffer=sendbuf;
-    t.rx_buffer=recvbuf;
+    t.tx_buffer=SPITxBuffer;
+    t.rx_buffer=SPIRxBuffer;
     // xTaskCreate( prvTaskA, "TaskA", configMINIMAL_STACK_SIZE, NULL,
     //                         tskIDLE_PRIORITY, ( xTaskHandle * ) NULL );
      while(1){
-          //Clear receive buffer, set send buffer to something sane
-
-
-        //Set up a transaction of 128 bytes to send/receive
-    
-
         ret=spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
-       // recvbuf[1]=1; //this cause commandhandler call wifi send
-        Spiparser->ProcessData(Spiparser,recvbuf,20);
-
-        printf("Received: %s\n", recvbuf);
-        //n++;
+        Spiparser->ProcessSPIData(Spiparser,SPIRxBuffer,20);
+        printf("Received: %s\n", SPIRxBuffer);
     }
     
 }

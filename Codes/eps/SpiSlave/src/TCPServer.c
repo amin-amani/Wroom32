@@ -182,32 +182,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     }
     return ESP_OK;
 }
-//=================================================================================================================
 
-//  void TCPServerInit(void)
-// {
-//     tcpip_adapter_init();
-//     wifi_event_group = xEventGroupCreate();
-//     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-
-//     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-//     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-//     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-//     wifi_config_t wifi_config = {
-//         .ap = {
-//             .ssid = EXAMPLE_WIFI_SSID,
-//             .ssid_len = strlen(EXAMPLE_WIFI_SSID),
-//             .password = EXAMPLE_WIFI_PASS,
-//             .max_connection = 2,
-//             .authmode = WIFI_AUTH_OPEN// WIFI_AUTH_WPA_WPA2_PSK
-//         },
-//     };
-
-//     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
-//     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_AP) );
-//     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config) );
-//     ESP_ERROR_CHECK( esp_wifi_start() );
-// }
  void TCPServerInit(char *ssid,char*password)
 {
     tcpip_adapter_init();
@@ -226,18 +201,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             .authmode =  WIFI_AUTH_WPA_WPA2_PSK
         },
     };
-    
-   for(int i=0;i<strlen(password);i++)
-    {
-        wifi_config.ap.password[i]=password[i];
-        wifi_config.ap.password[i+1]=0;
-    }
-   for(int i=0;i<strlen(ssid);i++)
-    {
-        wifi_config.ap.ssid[i]=ssid[i];
-        wifi_config.ap.ssid[i+1]=0;
-    }
-  wifi_config.ap.ssid_len=strlen(ssid);
+        memset(wifi_config.ap.password, 0, sizeof(wifi_config.ap.password));
+        memset(wifi_config.ap.ssid, 0, sizeof(wifi_config.ap.ssid));
+        memcpy(wifi_config.ap.password,password,strlen(password));
+        memcpy(wifi_config.ap.ssid,ssid,strlen(ssid));
+        wifi_config.ap.ssid_len=strlen(ssid);
 
     if(strlen(password)<=0)
     {

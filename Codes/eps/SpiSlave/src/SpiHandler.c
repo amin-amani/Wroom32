@@ -9,23 +9,25 @@ void StartProcessData(SpiHandler * self,char*data,int len)
 {
 
     SPIPacketType *packet=(SPIPacketType*)data;
-    if(packet->Command==1 || packet->Command==2)
-    self->FunctionList[packet->Command-1](data,len);
+    if(packet->Command<6)
+    self->FunctionList[packet->Command](packet->Data,packet->Datalen);
 
 }
 //==============================================================================
 SpiHandler* CreateSpiHandler()
 {
     SpiHandler* result = (SpiHandler*) malloc(sizeof(SpiHandler));
-    result->ProcessData=StartProcessData;
-
-
+    result->ProcessSPIData=StartProcessData;
     return result;
 }
 
  //==============================================================================
 void SpiHandlerInit(SpiHandler * self)
 {
-    self->FunctionList[0]=self->SPIDataReadyCallback;
-    self->FunctionList[1]=self->WIFIDataReadyCallback;
+    self->FunctionList[0]=self->SPISendDataCallback;
+    self->FunctionList[1]=self->WIFISendDataCallback;
+    self->FunctionList[2]=self->WIFIReadDataCallback;
+    self->FunctionList[3]=self->WIFISetSSIDCallback;
+    self->FunctionList[4]=self->WIFISetPasswordCallback;
+    self->FunctionList[5]=self->WIFIStartApCallback;
 }

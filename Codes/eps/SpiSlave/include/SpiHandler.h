@@ -19,11 +19,14 @@ typedef struct SpiHandler SpiHandler;
 
  struct  SpiHandler {
 
-   void (*FunctionList[2])(char *data,int len);
-   void (*SPIDataReadyCallback)(char*data,int len);
-   void (*WIFIDataReadyCallback)(char*data,int len);//event to send wifi
-   //void (*WIFIDataReadyCallback)(char*data,int len);
-   void (*ProcessData)(SpiHandler * self,char*data,int len);
+   void (*FunctionList[6])(char *data,int len);
+   void (*SPISendDataCallback)(char*data,int len);
+   void (*WIFISendDataCallback)(char*data,int len);//event to send wifi
+   void (*WIFIReadDataCallback)(char*data,int len);
+   void (*WIFISetSSIDCallback)(char*data,int len);
+   void (*WIFISetPasswordCallback)(char*data,int len);
+   void (*WIFIStartApCallback)(char*data,int len);
+   void (*ProcessSPIData)(SpiHandler * self,char*data,int len);
    
 };
 //struct SpiHandler;  // forward declared for encapsulation

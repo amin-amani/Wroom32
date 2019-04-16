@@ -20,11 +20,15 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdio.h>
+#include <string.h>
+#include "TCPServer.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #define SSHigh() (GPIOB->ODR|=(1<<9)) 
 #define SSLow() (GPIOB->ODR&=~(1<<9)) 
+char temp_main[20];
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +52,7 @@ SPI_HandleTypeDef hspi2;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-uint8_t txd[20],rxd[20];
+//uint8_t txd[20],rxd[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,10 +73,19 @@ static void MX_USART3_UART_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
+
+void SPISend(char *txBuffer,char*rxBuffer,int len)
+{
+
+    SSLow();
+  HAL_SPI_TransmitReceive(&hspi2,&txBuffer[0],&rxBuffer[0],len,10);
+  SSHigh();    
+}
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+TCPServerInit(SPISend);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,7 +107,7 @@ MX_USART3_UART_Init();
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  sprintf(txd,"%s","salam this is test");
+  //sprintf(txd,"%s","salam this is test");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,15 +115,19 @@ MX_USART3_UART_Init();
   while (1)
   {
     /* USER CODE END WHILE */
-    SSLow();
-   HAL_SPI_TransmitReceive(&hspi2,&txd[0],&rxd[0],20,10);
-   //HAL_Delay(1);
-    //GPIOB->ODR^=1<<9;
-    
-SSHigh();    
-    GPIOD->ODR^=1<<13;
-    HAL_UART_Transmit(&huart3,rxd,20,10);
-HAL_Delay(1000);
+
+  GPIOD->ODR^=1<<13;
+  sprintf(temp_main,"NAME");
+  SetSSID(temp_main);
+  HAL_Delay(1000);
+  sprintf(temp_main,"PASS");
+  SetPassword(temp_main);
+  HAL_Delay(1000);
+  StartAp();  
+    HAL_Delay(1000);
+    SendTCP("1234567890",10);
+  //HAL_UART_Transmit(&huart3,rxd,20,10);
+  HAL_Delay(1000);
 //GPIOB->ODR^=1<<9;
     /* USER CODE BEGIN 3 */
   }
