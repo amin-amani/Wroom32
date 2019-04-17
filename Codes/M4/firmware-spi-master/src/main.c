@@ -74,7 +74,7 @@ static void MX_USART3_UART_Init(void);
   * @retval int
   */
 
-void SPISend(char *txBuffer,char*rxBuffer,int len)
+void SPISend(char *txBuffer,char*rxBuffer,uint8_t len)
 {
 
     SSLow();
