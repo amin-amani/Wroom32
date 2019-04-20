@@ -2,6 +2,12 @@
 #define __SPI__HANDLER
 #include <stdint.h>
 
+
+#define NUMBER_OF_FUNCTIONS 8
+
+#ifndef THIS_TYPE
+#define THIS_TYPE
+
 typedef struct 
 {
   
@@ -10,23 +16,30 @@ typedef struct
   uint8_t FrameNumber;
   uint8_t Datalen;
   char Data[12];
-  uint8_t CRC;
+  uint8_t sum;
   uint8_t EndOfPacket;
    
 }SPIPacketType;
 
+#endif
+extern SPIPacketType StatusPacket;
+
 typedef struct SpiHandler SpiHandler;
+SPIPacketType WIFIReceivedPacket;
 
  struct  SpiHandler {
+    uint8_t LastCommand;
+    uint8_t LastError;
 
-   void (*FunctionList[6])(char *data,int len);
-   void (*SPISendDataCallback)(char*data,int len);
-   void (*WIFISendDataCallback)(char*data,int len);//event to send wifi
-   void (*WIFIReadDataCallback)(char*data,int len);
-   void (*WIFISetSSIDCallback)(char*data,int len);
-   void (*WIFISetPasswordCallback)(char*data,int len);
-   void (*WIFIStartApCallback)(char*data,int len);
+   uint8_t (*FunctionList[NUMBER_OF_FUNCTIONS])(char *data,int len);
+   uint8_t (*SPISendDataCallback)(char*data,int len);
+   uint8_t (*WIFISendDataCallback)(char*data,int len);//event to send wifi
+   uint8_t (*WIFIReadDataCallback)(char*data,int len);
+   uint8_t (*WIFISetSSIDCallback)(char*data,int len);
+   uint8_t (*WIFISetPasswordCallback)(char*data,int len);
+   uint8_t (*WIFIStartApCallback)(char*data,int len);
    void (*ProcessSPIData)(SpiHandler * self,char*data,int len);
+ //  uint8_t SPIGetStatus(SpiHandler * self,char*data,int len);
    
 };
 //struct SpiHandler;  // forward declared for encapsulation

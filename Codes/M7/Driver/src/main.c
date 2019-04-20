@@ -75,7 +75,9 @@ static void MX_SPI4_Init(void);
 {
 
     SSLow();
+
   HAL_SPI_TransmitReceive(&hspi4,&txBuffer[0],&rxBuffer[0],len,10);
+memcpy(rx_buffer,&StatusPacket,sizeof(SPIPacketType));  
   SSHigh();    
 }
 
@@ -116,15 +118,18 @@ SSHigh();
   {
     /* USER CODE END WHILE */
 
-  sprintf(temp_main,"NAME");
-  SetSSID(temp_main);
+  uint8_t res= SetSSID("Name");
+  sprintf(temp_main,"ssid:%d",res);
   HAL_Delay(1000);
-  sprintf(temp_main,"PASS");
-  SetPassword(temp_main);
+    SendTCP(temp_main,12);  
   HAL_Delay(1000);
-  StartAp();  
-    HAL_Delay(1000);
-    SendTCP("1234567890UV",12);
+   res=SetPassword("Pass");
+     sprintf(temp_main,"pass:%d",res);
+  HAL_Delay(1000);
+      SendTCP(temp_main,12);  
+  // StartAp();  
+  //   HAL_Delay(1000);
+  //   SendTCP("1234567890UV",12);
   //HAL_UART_Transmit(&huart3,rxd,20,10);
   HAL_Delay(1000);
     /* USER CODE BEGIN 3 */

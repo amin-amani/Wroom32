@@ -34,19 +34,22 @@ static void TCPServerTask(void *pvParameters)
     vTaskDelete(NULL);
 }
 //========================================================================================
-void TCPServerStartAP(char *data,int len)
+uint8_t TCPServerStartAP(char *data,int len)
 {
 ESP_LOGI("start ap","%d",0);
+return 0;
 }
 //========================================================================================
-void TCPServerSetPassword(char *data,int len)
+uint8_t TCPServerSetPassword(char *data,int len)
 {
 ESP_LOGI("set pass:","%s",data);
+return 0;
 }
 //========================================================================================
-void TCPServerSetSSID(char *data,int len)
+uint8_t TCPServerSetSSID(char *data,int len)
 {
     ESP_LOGI("set ssid:","%s",data);
+    return 0;
 }
 //========================================================================================
 void TCPServerNewClientConnected()
@@ -54,19 +57,21 @@ void TCPServerNewClientConnected()
     xTaskCreate(TCPServerTask, "tcp_server", 4096, NULL, 5, NULL);  
 }
 //========================================================================================
-void TCPServerDataReceived(char *data,int len)
+void  TCPServerDataReceived(char *data,int len)
 {
     ESP_LOGI("newData", "datacallback=%s", data);
     memset(WIFIRxBuffer, 0, sizeof(WIFIRxBuffer));
     memcpy(WIFIRxBuffer,data,len);
+
 }
 //========================================================================================
-void TCPSend(char*data,int len) 
+uint8_t TCPSend(char*data,int len) 
 {
 //char temp[12];
 ESP_LOGI("tcp send:","%s -> %d",data,len);
 //strcpy(temp,"abcdefghijkl");
 TCPServerSendData(data,len);
+return 0;
 }
 //========================================================================================
 void TCPServerReadData(char*data,int len)
