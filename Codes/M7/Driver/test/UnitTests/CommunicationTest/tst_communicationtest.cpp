@@ -1,3 +1,4 @@
+#define TESTUNIT
 #include <QtTest>
 #include <QDebug>
 #include "../../../include/TCPServer.h"
@@ -30,6 +31,7 @@ private slots:
     void test_StartAP();
     void test_SendTCP();
     void test_ReadTCP();
+    void test_SPIPrint();
 
 signals:
     void DataReady();
@@ -149,12 +151,18 @@ void CommunicationTest::test_ReadTCP()
     TCPServerInit(SPIEvent);
      uint8_t error=0;
      strcpy(WIFIReceivedPacket.Data,"abcdefghijkl");
+     //SetPassword("pas");
      error=ReadTCP(data,sizeof(data));
-     qDebug()<<data<<QByteArray::fromRawData(data,12).toHex();
+     //qDebug()<<data<<QByteArray::fromRawData(data,12).toHex();
 
-    qDebug()<<"and what:"<<error<<QString::number(error,16);
+    //qDebug()<<"read tcp what:"<<error<<QString::number(error,16);
     QVERIFY(error==0);
     QVERIFY(strncmp(data,"abcdefghijkl",12)==0);
+}
+//================================================================================================
+void CommunicationTest::test_SPIPrint()
+{
+SPIPrint("hello");
 }
 //================================================================================================
 QTEST_APPLESS_MAIN(CommunicationTest)

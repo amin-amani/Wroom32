@@ -49,6 +49,7 @@
 
 SPI_HandleTypeDef hspi4;
 char temp_main[30];
+char WIFIData[12];
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -77,13 +78,14 @@ static void MX_SPI4_Init(void);
     SSLow();
 
   HAL_SPI_TransmitReceive(&hspi4,&txBuffer[0],&rxBuffer[0],len,10);
-memcpy(rx_buffer,&StatusPacket,sizeof(SPIPacketType));  
+
   SSHigh();    
+  HAL_Delay(100);
 }
 
 int main(void)
 {
-  char rx[5];
+  
   TCPServerInit(SPISend);
   /* USER CODE BEGIN 1 */
 
@@ -114,26 +116,35 @@ SSHigh();
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_Delay(3000);
+  SPIPrint("Hello!");
+  
+  if(SetSSID("RMotion")!=0)
+  {
+  SPIPrint("ER:Set SSID\n");
+  }
+  if(SetPassword("1234567890!")!=0)
+  {
+  SPIPrint("ER:Set SSID\n");
+  }
+  
+  if(StartAp()!=0)
+  {
+  SPIPrint("ER:Start ap\n");
+  }
+   
+   
+
   while (1)
   {
     /* USER CODE END WHILE */
 
-  uint8_t res= SetSSID("Name");
-  sprintf(temp_main,"ssid:%d",res);
-  HAL_Delay(1000);
-    SendTCP(temp_main,12);  
-  HAL_Delay(1000);
-   res=SetPassword("Pass");
-     sprintf(temp_main,"pass:%d",res);
-  HAL_Delay(1000);
-      SendTCP(temp_main,12);  
-  // StartAp();  
-  //   HAL_Delay(1000);
-  //   SendTCP("1234567890UV",12);
-  //HAL_UART_Transmit(&huart3,rxd,20,10);
-  HAL_Delay(1000);
-    /* USER CODE BEGIN 3 */
-  }
+      
+      ReadTCP(WIFIData,12);
+      SendTCP(WIFIData,12);
+       HAL_Delay(1000);
+
+}
   /* USER CODE END 3 */
 }
 

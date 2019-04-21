@@ -13,24 +13,27 @@ public:
     CanPassData();
     ~CanPassData();
 
-    static void spiSendCallback(char *data, int len);
-    static void WIFISendCallback(char *data, int len);
-    static void WIFIReadCallback(char *data, int len);
-    static void WIFISetSSIDCallback(char *data, int len);
-    static void WIFISetPasswordCallback(char *data, int len);
-    static void WIFIStartApCallback(char *data, int len);
+    static uint8_t spiSendEvent(uint8_t *data, int len);
+    static uint8_t WIFISendEvent(uint8_t *data, int len);
+    static uint8_t WIFIReadEvent(uint8_t *data, int len);
+    static uint8_t WIFISetSSIDEvent(uint8_t *data, int len);
+    static uint8_t WIFISetPasswordEvent(uint8_t *data, int len);
+    static uint8_t WIFIStartApEvent(uint8_t *data, int len);
+
+
+
 public slots:
 
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    void Test_SPIPacket();
-
     void Test_WIFISendPacket();
-    void Test_WIFIReadPacket();
+    void Test_SPIPacket();
     void Test_SetSSIDPacket();
     void Test_SetPassPacket();
     void Test_StartApPacket();
+
+    void Test_WIFIReadPacket();
 
 };
 //===============================================================================================
@@ -51,12 +54,12 @@ void CanPassData::initTestCase()
 {
 
     handler=CreateSpiHandler();
-    handler->SPISendDataCallback=spiSendCallback;
-    handler->WIFISendDataCallback=WIFISendCallback;
-    handler->WIFIReadDataCallback=WIFIReadCallback;
-    handler->WIFISetSSIDCallback=WIFISetSSIDCallback;
-    handler->WIFISetPasswordCallback=WIFISetPasswordCallback;
-    handler->WIFIStartApCallback=WIFIStartApCallback;
+    handler->SPISendDataCallback=spiSendEvent;
+    handler->WIFISendDataCallback=WIFISendEvent;
+    handler->WIFIReadDataCallback=WIFIReadEvent;
+    handler->WIFISetSSIDCallback=WIFISetSSIDEvent;
+    handler->WIFISetPasswordCallback=WIFISetPasswordEvent;
+    handler->WIFIStartApCallback=WIFIStartApEvent;
 }
 //===============================================================================================
 
@@ -66,73 +69,64 @@ void CanPassData::cleanupTestCase()
 }
 //===============================================================================================
 
-void CanPassData::spiSendCallback(char*data,int len)
+uint8_t CanPassData::spiSendEvent(uint8_t*data,int len)
 {
-qDebug()<<"callback";
+//qDebug()<<"callback";
 CalledFunction="SPI";
 }
 //===============================================================================================
 
-void CanPassData::WIFISendCallback(char*data,int len)
+uint8_t CanPassData::WIFISendEvent(uint8_t*data,int len)
 {
-qDebug()<<"callback";
+//qDebug()<<"callback";
 CalledFunction="WIFI";
 }
 //===============================================================================================
 
-void CanPassData::WIFIReadCallback(char*data,int len)
+uint8_t CanPassData::WIFIReadEvent(uint8_t*data,int len)
 {
-qDebug()<<"callback";
+//qDebug()<<"callback";
 CalledFunction="wifiread";
 }
 //===============================================================================================
 
-void CanPassData::WIFISetSSIDCallback(char *data, int len)
+uint8_t CanPassData::WIFISetSSIDEvent(uint8_t *data, int len)
 {
-    qDebug()<<"callback";
+    //qDebug()<<"callback";
     CalledFunction="setssid";
 }
 //===============================================================================================
 
-void CanPassData::WIFISetPasswordCallback(char *data, int len)
+uint8_t CanPassData::WIFISetPasswordEvent(uint8_t *data, int len)
 {
-    qDebug()<<"callback";
+   // qDebug()<<"callback";
     CalledFunction="setpass";
 }
 //===============================================================================================
 
-void CanPassData::WIFIStartApCallback(char *data, int len)
+uint8_t CanPassData::WIFIStartApEvent(uint8_t *data, int len)
 {
-    qDebug()<<"callback";
+
+   // qDebug()<<"callback";
     CalledFunction="startap";
 }
 //===============================================================================================
 void CanPassData::Test_WIFISendPacket()
 {
 //QSKIP("This macro caus skip test");
-char packet[20]={0x7e,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t packet[20]={0x7e,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 SpiHandlerInit(handler);
 CalledFunction="";
 handler->ProcessSPIData(handler,packet,2);
 QVERIFY(CalledFunction=="WIFI");
 
 }
-//===============================================================================================
-void CanPassData::Test_WIFIReadPacket()
-{
-      //QSKIP("This macro caus skip test");
-char packet[20]={0x7e,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-SpiHandlerInit(handler);
-CalledFunction="";
-handler->ProcessSPIData(handler,packet,2);
-QVERIFY(CalledFunction=="wifiread");
 
-}
 //===============================================================================================
 
 void CanPassData::Test_SetSSIDPacket()
 {
-    char packet[20]={0x7e,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    uint8_t packet[20]={0x7e,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     SpiHandlerInit(handler);
     CalledFunction="";
     handler->ProcessSPIData(handler,packet,2);
@@ -142,7 +136,7 @@ void CanPassData::Test_SetSSIDPacket()
 
 void CanPassData::Test_SetPassPacket()
 {
-    char packet[20]={0x7e,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    uint8_t packet[20]={0x7e,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     SpiHandlerInit(handler);
     CalledFunction="";
     handler->ProcessSPIData(handler,packet,2);
@@ -152,7 +146,7 @@ void CanPassData::Test_SetPassPacket()
 
 void CanPassData::Test_StartApPacket()
 {
-    char packet[20]={0x7e,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    uint8_t packet[20]={0x7e,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     SpiHandlerInit(handler);
     CalledFunction="";
     handler->ProcessSPIData(handler,packet,2);
@@ -161,11 +155,26 @@ void CanPassData::Test_StartApPacket()
 //===============================================================================================
 void CanPassData::Test_SPIPacket()
 {
-char packet[20]={0x7e,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint8_t packet[20]={0x7e,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 SpiHandlerInit(handler);
 CalledFunction="";
 handler->ProcessSPIData(handler,packet,2);
 QVERIFY(CalledFunction=="SPI");
+
+}
+//===============================================================================================
+void CanPassData::Test_WIFIReadPacket()
+{
+      //QSKIP("This macro caus skip test");
+    memcpy(WIFIReceivedPacket.Data,"itswifi data",12);
+uint8_t packet[18]={0x7e,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x7e};
+uint8_t readStatusRequest[18]={0x7e,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x7e};
+SpiHandlerInit(handler);
+CalledFunction="";
+handler->ProcessSPIData(handler,packet,18);
+handler->ProcessSPIData(handler,readStatusRequest,18);
+qDebug()<< "status packet="<<QByteArray::fromRawData((char*) StatusPacket.Data,12);
+QVERIFY(strncmp("itswifi data",(char*)StatusPacket.Data,12)==0);
 
 }
 //===============================================================================================

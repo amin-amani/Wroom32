@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef TESTUNIT
+#include<qdebug.h>
+#endif
 
 #define   TCPSendDataCommand 1
 #define   TCPReadDataCommand 2
@@ -11,6 +14,7 @@
 #define   WIFIPasswordCommand 4
 #define   WIFIStartAPCommand 5
 #define   WIFITCPReadCommand 7
+#define   SPIPrintCommand 8
 #define START_END_FRAME 0x7e
 #ifndef THIS_TYPE
 #define THIS_TYPE
@@ -33,15 +37,16 @@ typedef struct
 
 
  //================================================================================================
+
  uint8_t CalcSum(uint8_t *data,int len)
  {
-     uint8_t sum=0;
-     int i;
-     for(i=0;i<len;i++){
+    uint8_t sum=0;
+    int i;
+    for(i=0;i<len;i++){
 
-         sum^=data[i];
-     }
-     return sum;
+        sum^=data[i];
+    }
+    return sum;
  }
 
  //================================================================================================
@@ -84,8 +89,7 @@ uint8_t ReadTCP(char*data,uint8_t len)
 
     packet.StartOfPacket=START_END_FRAME;
     packet.EndOfPacket=START_END_FRAME;
-    packet.Command=WIFITCPReadCommand;
-    
+    packet.Command=7;
     packet.Datalen=(len<=sizeof (packet.Data))?len:sizeof (packet.Data);
     memset(packet.Data,0,sizeof (packet.Data));
     memcpy(packet.Data,data,packet.Datalen);
@@ -95,6 +99,7 @@ uint8_t ReadTCP(char*data,uint8_t len)
     SpiSendFunction(empty,response,sizeof (SPIPacketType));
     memcpy(data,&response[4],12);
     uint8_t sum=CalcSum((uint8_t*) data,12);
+    //qDebug()<<"respose data="<<QByteArray::fromRawData((char*)response,20).toHex();
     //qDebug()<<"reciver sum="<<sum<<" d="<<QString::number(response[sizeof(SPIPacketType)-2]&0xff,10);
 
     if(sum==response[sizeof(SPIPacketType)-2])return 0;
@@ -130,6 +135,21 @@ uint8_t SetPassword(char*pass)
     memcpy(packet.Data,pass,packet.Datalen);
     SpiSendFunction((uint8_t*)&packet,rxd,sizeof (packet));
     return GetStatus(WIFIPasswordCommand);
+}
+//=========================================================================================
+uint8_t SPIPrint(char*message)
+{
+    SPIPacketType packet;
+    uint8_t rxd[20];
+    packet.StartOfPacket=START_END_FRAME;
+    packet.EndOfPacket=START_END_FRAME;
+    packet.Command=SPIPrintCommand;
+    packet.Datalen=(strlen(message)<=sizeof (packet.Data))?strlen(message):sizeof (packet.Data);
+    memset(packet.Data,0,sizeof (packet.Data));
+    memcpy(packet.Data,message,packet.Datalen);
+    SpiSendFunction((uint8_t*)&packet,rxd,sizeof (packet));
+    return 0;
+//    return GetStatus(WIFIPasswordCommand);
 }
 //=========================================================================================
 uint8_t StartAp()

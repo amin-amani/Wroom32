@@ -19,12 +19,11 @@
 #define GPIO_CS 5
 //------------------------------------------------------------------------------------
 SpiHandler *Spiparser;
-char SPITxBuffer[20]="";
-char SPIRxBuffer[20]="";
-char WIFIRxBuffer[20]="";
-
-
-
+uint8_t SPITxBuffer[20]="";
+uint8_t SPIRxBuffer[20]="";
+uint8_t WIFIRxBuffer[20]="";
+char WIFISSID[12];
+char WIFIPassword[12];
 //========================================================================================
 static void TCPServerTask(void *pvParameters)
 {
@@ -34,22 +33,26 @@ static void TCPServerTask(void *pvParameters)
     vTaskDelete(NULL);
 }
 //========================================================================================
-uint8_t TCPServerStartAP(char *data,int len)
+uint8_t TCPServerStartAP(uint8_t *data,int len)
 {
-ESP_LOGI("start ap","%d",0);
-return 0;
-}
-//========================================================================================
-uint8_t TCPServerSetPassword(char *data,int len)
-{
-ESP_LOGI("set pass:","%s",data);
-return 0;
-}
-//========================================================================================
-uint8_t TCPServerSetSSID(char *data,int len)
-{
-    ESP_LOGI("set ssid:","%s",data);
+    ESP_LOGI("start ap:","%s",WIFISSID);
+    TCPServerInit(WIFISSID,WIFIPassword);
     return 0;
+}
+//========================================================================================
+uint8_t TCPServerSetPassword(uint8_t *data,int len)
+{
+memset(WIFIPassword,0,sizeof(WIFIPassword));
+memcpy(WIFIPassword,data,len);
+return 0;
+}
+//========================================================================================
+uint8_t TCPServerSetSSID(uint8_t *data,int len)
+{
+  memset(WIFISSID,0,sizeof(WIFISSID));
+memcpy(WIFISSID,data,len);
+return 0;
+    
 }
 //========================================================================================
 void TCPServerNewClientConnected()
@@ -59,30 +62,31 @@ void TCPServerNewClientConnected()
 //========================================================================================
 void  TCPServerDataReceived(char *data,int len)
 {
-    ESP_LOGI("newData", "datacallback=%s", data);
-    memset(WIFIRxBuffer, 0, sizeof(WIFIRxBuffer));
-    memcpy(WIFIRxBuffer,data,len);
+    
+    memset(WIFIReceivedPacket.Data, 0, sizeof(WIFIReceivedPacket.Data));
+    memcpy(WIFIReceivedPacket.Data,data,len);
+    ESP_LOGI("newData", "datacallback=%s", WIFIReceivedPacket.Data);
 
 }
 //========================================================================================
-uint8_t TCPSend(char*data,int len) 
+uint8_t TCPSend(uint8_t*data,int len) 
 {
 //char temp[12];
 ESP_LOGI("tcp send:","%s -> %d",data,len);
 //strcpy(temp,"abcdefghijkl");
-TCPServerSendData(data,len);
-return 0;
+
+return TCPServerSendData((char*)data,len);;
 }
 //========================================================================================
-void TCPServerReadData(char*data,int len)
+void TCPServerReadData(uint8_t*data,int len)
 {
-            ESP_LOGI("read sata:","%s -> %d",data,len);
+    ESP_LOGI("read sata:","%s -> %d",data,len);
     memset(SPITxBuffer, 0, 20);
     memcpy(SPITxBuffer,WIFIRxBuffer,sizeof(WIFIRxBuffer));
 
 }
 //========================================================================================
-void SPISendData(char*data,int len)
+void SPISendData(uint8_t*data,int len)
 {
    ESP_LOGI("spi end:","%s -> %d",data,len);
     memset(SPITxBuffer, 0, 20);
@@ -159,6 +163,8 @@ void app_main()
     spi_slave_transaction_t t;
      memset(SPIRxBuffer, 0, 20);
     memset(&t, 0, sizeof(t));
+    memset(WIFIReceivedPacket.Data, 0, sizeof(WIFIReceivedPacket.Data));
+    memcpy(WIFIReceivedPacket.Data,"no data yet.",12);
 
     ESP_ERROR_CHECK( nvs_flash_init() );
     Spiparser=CreateSpiHandler();
@@ -174,12 +180,14 @@ void app_main()
     SpiHandlerInit(Spiparser);
 
     SPIInit();
-    TCPNewClientConnectedCallback=TCPServerNewClientConnected;
+    
+TCPNewClientConnectedCallback=TCPServerNewClientConnected;
     TCPServerNewDataReceivedCallback=TCPServerDataReceived;
-    TCPServerInit("mainwifi","");
+    
+
     memset(SPIRxBuffer, 0, 20);
-    sprintf(SPITxBuffer,"%s", "init response"); 
-    t.length=20*8;
+    //sprintf(SPITxBuffer,"%s", "init response"); 
+    t.length=18*8;
     t.tx_buffer=SPITxBuffer;
     t.rx_buffer=SPIRxBuffer;
     // xTaskCreate( prvTaskA, "TaskA", configMINIMAL_STACK_SIZE, NULL,
@@ -187,7 +195,8 @@ void app_main()
      while(1){
         ret=spi_slave_transmit(HSPI_HOST, &t, portMAX_DELAY);
         Spiparser->ProcessSPIData(Spiparser,SPIRxBuffer,20);
-        printf("Received: %s\n", SPIRxBuffer);
+        memcpy(SPITxBuffer,(char*)&StatusPacket,sizeof(SPIPacketType));
+       // printf("Received: %s\n", SPIRxBuffer);
     }
     
 }
